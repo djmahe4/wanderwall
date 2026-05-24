@@ -1,0 +1,16 @@
+{
+  "name": "WanderWall",
+  "short_name": "WanderWall",
+  "description": "Wander through events. Wall-to-wall discovery.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FFF8F0",
+  "theme_color": "#C75B39",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64 32x32 16x16",
+      "type": "image/x-icon"
+    }
+  ]
+}

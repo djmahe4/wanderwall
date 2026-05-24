@@ -1,65 +1,143 @@
-import Image from "next/image";
+"use client";
+
+import { useMemo, useState } from "react";
+import Container from "@/components/layout/Container";
+import FilterBar from "@/components/wall/FilterBar";
+import MasonryGrid from "@/components/wall/MasonryGrid";
+import WallEmptyState from "@/components/wall/WallEmptyState";
+import Skeleton from "@/components/ui/Skeleton";
+import { QUICK_FILTERS } from "@/lib/constants";
+import { useEvents } from "@/hooks/useEvents";
+import { useAuth } from "@/hooks/useAuth";
+import { computeWanderScore } from "@/lib/utils";
 
 export default function Home() {
+  const { profile } = useAuth();
+  const [filters, setFilters] = useState({
+    limit: 24,
+    minKtu: 0,
+    wanderMode: false,
+    sort: "newest",
+  });
+  const [search, setSearch] = useState("");
+
+  const { events, loading } = useEvents({
+    location: filters.location,
+    maxCost: filters.maxCost,
+    minKtu: filters.minKtu,
+    ktuCategory: filters.ktuCategory,
+    dateFrom: filters.dateFrom,
+    dateTo: filters.dateTo,
+    limit: filters.limit,
+    offset: filters.offset,
+    search,
+  });
+
+  const sortedEvents = useMemo(() => {
+    if (!profile || filters.sort !== "relevance") return events;
+    return [...events].sort(
+      (a, b) =>
+        computeWanderScore(b, {
+          interests: profile.interests,
+          preferredLocation: profile.preferences?.preferredLocation,
+          maxCost: profile.preferences?.maxCost,
+          minKtuPoints: profile.preferences?.minKtuPoints,
+        }) -
+        computeWanderScore(a, {
+          interests: profile.interests,
+          preferredLocation: profile.preferences?.preferredLocation,
+          maxCost: profile.preferences?.maxCost,
+          minKtuPoints: profile.preferences?.minKtuPoints,
+        }),
+    );
+  }, [events, profile, filters.sort]);
+
+  const handleQuickFilter = (filter) => {
+    if (filter.value === "today") {
+      const today = new Date().toISOString().split("T")[0];
+      setFilters((prev) => ({ ...prev, dateFrom: today, dateTo: today }));
+    }
+    if (filter.value === "week") {
+      const today = new Date();
+      const week = new Date(today);
+      week.setDate(today.getDate() + 7);
+      setFilters((prev) => ({
+        ...prev,
+        dateFrom: today.toISOString().split("T")[0],
+        dateTo: week.toISOString().split("T")[0],
+      }));
+    }
+    if (filter.value === "free") {
+      setFilters((prev) => ({ ...prev, maxCost: 0 }));
+    }
+    if (filter.value === "ktu") {
+      setFilters((prev) => ({ ...prev, minKtu: 50 }));
+    }
+  };
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.js file.
+    <div className="pb-16">
+      <section className="relative overflow-hidden bg-gradient-to-r from-terracotta/90 via-terracotta to-teal/80 py-16 text-cream">
+        <Container className="space-y-6">
+          <div className="flex items-center gap-3 text-sm uppercase tracking-[0.2em]">
+            <span className="rounded-full bg-cream/20 px-3 py-1">🧭📍</span>
+            Living event wall
+          </div>
+          <h1 className="text-4xl font-semibold">
+            Wander through events. Wall-to-wall discovery.
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+          <p className="max-w-2xl text-sm text-cream/80">
+            Pin your event to the wall, discover what’s happening near you, and
+            earn KTU activity points along the way.
           </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
+          <div className="flex flex-col gap-4 sm:flex-row">
+            <input
+              className="w-full rounded-full border border-cream/30 bg-cream/10 px-5 py-3 text-sm text-cream placeholder:text-cream/70"
+              placeholder="Search by event, club, or keyword"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+            <select
+              className="rounded-full border border-cream/30 bg-cream/10 px-5 py-3 text-sm text-cream"
+              value={filters.sort}
+              onChange={(event) =>
+                setFilters((prev) => ({ ...prev, sort: event.target.value }))
+              }
+            >
+              <option value="newest">Sort by Newest</option>
+              <option value="relevance">Sort by Relevance</option>
+            </select>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {QUICK_FILTERS.map((filter) => (
+              <button
+                key={filter.value}
+                onClick={() => handleQuickFilter(filter)}
+                className="rounded-full border border-cream/40 px-3 py-1 text-xs font-semibold text-cream/90 hover:bg-cream/10"
+              >
+                {filter.label}
+              </button>
+            ))}
+          </div>
+        </Container>
+      </section>
+
+      <Container className="mt-8 space-y-8">
+        <FilterBar filters={filters} onChange={setFilters} />
+        <div className="rounded-3xl bg-corkboard p-6 shadow-inner">
+          {loading ? (
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {Array.from({ length: 6 }).map((_, index) => (
+                <Skeleton key={index} className="h-72" />
+              ))}
+            </div>
+          ) : sortedEvents.length === 0 ? (
+            <WallEmptyState />
+          ) : (
+            <MasonryGrid events={sortedEvents} wanderMode={filters.wanderMode} />
+          )}
         </div>
-      </main>
+      </Container>
     </div>
   );
 }
