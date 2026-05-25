@@ -1,0 +1,72 @@
+@import "@fontsource-variable/inter";
+@import "@fontsource-variable/outfit";
+@import "tailwindcss";
+
+@theme inline {
+  --color-background: #fff8f0;
+  --color-foreground: #2d2d2d;
+  --color-primary: #c75b39;
+  --color-accent: #2a9d8f;
+  --font-sans: "Inter Variable", system-ui, sans-serif;
+  --font-heading: "Outfit Variable", system-ui, sans-serif;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background: #fff8f0;
+    color: #2d2d2d;
+    font-family: "Inter Variable", system-ui, sans-serif;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: "Outfit Variable", system-ui, sans-serif;
+  }
+}
+
+.masonry-wall {
+  column-count: 1;
+  column-gap: 1.25rem;
+}
+
+@media (min-width: 640px) {
+  .masonry-wall {
+    column-count: 2;
+  }
+}
+
+@media (min-width: 1024px) {
+  .masonry-wall {
+    column-count: 3;
+  }
+}
+
+@media (min-width: 1280px) {
+  .masonry-wall {
+    column-count: 4;
+  }
+}
+
+.poster-card {
+  break-inside: avoid;
+  margin-bottom: 1.25rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.poster-card:hover {
+  transform: scale(1.02) rotate(var(--random-rotate, 0deg));
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+}
+
+.wander-scatter {
+  position: relative;
+  min-height: 60vh;
+}
