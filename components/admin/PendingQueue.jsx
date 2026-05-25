@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Button from "@/components/ui/Button";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -9,7 +9,7 @@ export default function PendingQueue() {
   const [events, setEvents] = useState([]);
   const [rejections, setRejections] = useState({});
 
-  const fetchPending = async () => {
+  const fetchPending = useCallback(async () => {
     if (!user) return;
     const token = await user.getIdToken();
     const res = await fetch("/api/admin/events?status=pending", {
@@ -17,11 +17,11 @@ export default function PendingQueue() {
     });
     const data = await res.json();
     setEvents(data.events ?? []);
-  };
+  }, [user]);
 
   useEffect(() => {
     fetchPending().catch(() => {});
-  }, [user]);
+  }, [fetchPending]);
 
   const handleAction = async (eventId, status) => {
     if (!user) return;

@@ -22,8 +22,8 @@ module.exports = {
         "ktu-skill": "#152658",
       },
       fontFamily: {
-        sans: ["var(--font-inter)", "system-ui", "sans-serif"],
-        heading: ["var(--font-outfit)", "system-ui", "sans-serif"],
+        sans: ['"Inter Variable"', "system-ui", "sans-serif"],
+        heading: ['"Outfit Variable"', "system-ui", "sans-serif"],
       },
       boxShadow: {
         poster: "0 12px 32px rgba(45, 45, 45, 0.12)",

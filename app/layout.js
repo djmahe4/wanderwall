@@ -1,21 +1,10 @@
-import { Inter, Outfit } from "next/font/google";
+import "@fontsource-variable/inter";
+import "@fontsource-variable/outfit";
 import "./globals.css";
 import { AuthProvider } from "@/components/AuthProvider";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import Toast from "@/components/ui/Toast";
-
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
-  display: "swap",
-});
-
-const outfit = Outfit({
-  variable: "--font-outfit",
-  subsets: ["latin"],
-  display: "swap",
-});
 
 export const metadata = {
   metadataBase: new URL(
@@ -36,11 +25,8 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html
-      lang="en"
-      className={`${inter.variable} ${outfit.variable} h-full antialiased`}
-    >
-      <body className="min-h-full flex flex-col bg-cream text-charcoal">
+    <html lang="en" className="h-full antialiased">
+      <body className="min-h-full flex flex-col bg-cream text-charcoal font-sans">
         <AuthProvider>
           <Navbar />
           <main className="flex-1">{children}</main>

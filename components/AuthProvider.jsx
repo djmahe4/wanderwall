@@ -1,8 +1,8 @@
  "use client";
 
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { signInWithPopup, onAuthStateChanged, signOut } from "firebase/auth";
-import { auth, googleProvider } from "@/lib/firebase";
+import { getClientAuth, getGoogleProvider } from "@/lib/firebase";
 import toast from "react-hot-toast";
 
 const AuthContext = createContext(null);
@@ -12,7 +12,7 @@ export function AuthProvider({ children }) {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const syncProfile = async (currentUser) => {
+  const syncProfile = useCallback(async (currentUser) => {
     if (!currentUser) return;
     const token = await currentUser.getIdToken();
     const res = await fetch("/api/user/sync", {
@@ -24,10 +24,15 @@ export function AuthProvider({ children }) {
     }
     const data = await res.json();
     setProfile(data.profile);
-  };
+  }, []);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+    const authInstance = getClientAuth();
+    if (!authInstance) {
+      setLoading(false);
+      return;
+    }
+    const unsubscribe = onAuthStateChanged(authInstance, async (currentUser) => {
       setUser(currentUser);
       if (currentUser) {
         try {
@@ -41,11 +46,16 @@ export function AuthProvider({ children }) {
       setLoading(false);
     });
     return () => unsubscribe();
-  }, []);
+  }, [syncProfile]);
 
   const handleSignIn = async () => {
+    const authInstance = getClientAuth();
+    if (!authInstance) {
+      toast.error("Firebase is not configured.");
+      return;
+    }
     try {
-      await signInWithPopup(auth, googleProvider);
+      await signInWithPopup(authInstance, getGoogleProvider());
       toast.success("Welcome to WanderWall!");
     } catch (error) {
       console.error(error);
@@ -54,7 +64,9 @@ export function AuthProvider({ children }) {
   };
 
   const handleSignOut = async () => {
-    await signOut(auth);
+    const authInstance = getClientAuth();
+    if (!authInstance) return;
+    await signOut(authInstance);
     toast.success("Signed out");
   };
 
@@ -65,9 +77,13 @@ export function AuthProvider({ children }) {
       loading,
       signIn: handleSignIn,
       signOut: handleSignOut,
-      refreshProfile: async () => syncProfile(auth.currentUser),
+      refreshProfile: async () => {
+        const authInstance = getClientAuth();
+        if (!authInstance) return;
+        await syncProfile(authInstance.currentUser);
+      },
     }),
-    [user, profile, loading],
+    [user, profile, loading, syncProfile],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
